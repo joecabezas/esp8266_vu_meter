@@ -1,0 +1,6 @@
+{
+    "name": "Microphone",
+    "build": {
+        "flags": "-fexceptions"
+    }
+}
