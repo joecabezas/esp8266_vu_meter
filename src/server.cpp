@@ -6,21 +6,14 @@
 #include <ESP8266WiFi.h>
 #include <WebSocketsServer.h>
 
-// #include "Microphone.h"
+#include "Microphone.h"
 
-//this is set as `build_flags`
-// #define MICROPHONE_STATION_SSID "k014micstation"
-// #define MICROPHONE_STATION_PASSWORD ""
-// #define WEBSOCKETS_PORT 8080
-
-#define DEBUG
-
-#ifdef DEBUG
-#define DEBUG_NETWORK
+#ifndef DEBUG
+#undef DEBUG_NETWORK
 #endif
 
-// Microphone *microphone;
-WebSocketsServer webSocketsServer = WebSocketsServer(WEBSOCKETS_PORT);
+Microphone *microphone;
+WebSocketsServer *webSocketsServer;
 
 #define USE_SERIAL Serial
 
@@ -29,24 +22,31 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     switch (type)
     {
     case WStype_DISCONNECTED:
+#ifdef DEBUG_NETWORK
         USE_SERIAL.printf("[%u] Disconnected!\n", num);
+#endif
         break;
     case WStype_CONNECTED:
     {
-        IPAddress ip = webSocketsServer.remoteIP(num);
+#ifdef DEBUG_NETWORK
+        IPAddress ip = webSocketsServer->remoteIP(num);
         USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        webSocketsServer.sendTXT(num, "Connected");
+#endif
     }
     break;
     case WStype_TEXT:
+#ifdef DEBUG_NETWORK
         USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
+#endif
         break;
     case WStype_BIN:
+#ifdef DEBUG_NETWORK
         USE_SERIAL.printf("[%u] get binary length: %u\n", num, length);
         hexdump(payload, length);
+#endif
         break;
-        // default:
-        //     break;
+    default:
+        break;
     }
 }
 
@@ -57,14 +57,14 @@ void setup()
     USE_SERIAL.setDebugOutput(true);
 #endif
 
+#ifdef DEBUG_NETWORK
     for (uint8_t t = 4; t > 0; t--)
     {
-#ifdef DEBUG_NETWORK
         USE_SERIAL.printf("[SETUP] BOOT WAIT %d...\n", t);
         USE_SERIAL.flush();
         delay(1000);
-#endif
     }
+#endif
 
     WiFi.softAP(MICROPHONE_STATION_SSID, MICROPHONE_STATION_PASSWORD);
 #ifdef DEBUG_NETWORK
@@ -72,17 +72,18 @@ void setup()
     USE_SERIAL.println(WiFi.softAPIP());
 #endif
 
-    // webSocketsServer = new WebSocketsServer(WEBSOCKETS_PORT);
-    webSocketsServer.begin();
-    webSocketsServer.onEvent(webSocketEvent);
+    webSocketsServer = new WebSocketsServer(WEBSOCKETS_PORT);
+    webSocketsServer->begin();
+    webSocketsServer->onEvent(webSocketEvent);
 
-    // microphone = new Microphone(16000);
+    microphone = new Microphone(16000);
 }
 
 void loop()
 {
-    webSocketsServer.loop();
-    // int volume = microphone->getVolume();
-    // webSocketsServer.broadcastBIN((uint8_t *)&volume, sizeof(volume));
+    webSocketsServer->loop();
+
+    int volume = microphone->getVolume();
+    webSocketsServer->broadcastBIN((uint8_t *)&volume, sizeof(volume));
 }
 #endif
