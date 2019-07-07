@@ -30,19 +30,20 @@ void AudioLeds::addEffect(AbstractEffect *effect)
 
 void AudioLeds::nextEffect()
 {
-    #ifdef DEBUG
-        Serial.println("nextEffect: " + currentEffectIndex);
-    #endif
+#ifdef DEBUG
+    Serial.println("nextEffect: " + currentEffectIndex);
+#endif
     currentEffectIndex = (currentEffectIndex == effects.size()) ? 0 : currentEffectIndex + 1;
-    #ifdef DEBUG
-        Serial.println("nextEffect: " + currentEffectIndex);
-    #endif
+#ifdef DEBUG
+    Serial.println("nextEffect: " + currentEffectIndex);
+#endif
 }
 
-void AudioLeds::loop(uint16_t fill_size){
-    FastLED.show();
+void AudioLeds::loop(uint8_t fill_size)
+{
     FastLED.delay(1000 / FRAMES_PER_SECOND);
     getCurrentEffect()->loop(fill_size);
+    FastLED.show();
 }
 
 AbstractEffect *AudioLeds::getCurrentEffect()

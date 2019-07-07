@@ -6,7 +6,7 @@ class AbstractEffect
     protected:
         CRGB *leds;
     public:
-        virtual void loop(uint16_t fill_size);
+        virtual void loop(uint8_t fill_size);
 };
 
 #endif

@@ -5,12 +5,10 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
-#include <WebSocketsClient.h>
+#include <WiFiUdp.h>
 
 #include "AudioLeds.h"
 #include "effects/RainbowEffect.h"
-
-#define WEBSOCKETS_HOST "192.168.4.1"
 
 #ifndef DEBUG
 #undef DEBUG_NETWORK
@@ -18,65 +16,7 @@
 #endif
 
 AudioLeds *audioLeds;
-WebSocketsClient *webSocketsClient;
-
-#define USE_SERIAL Serial
-
-void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
-{
-
-    switch (type)
-    {
-    case WStype_DISCONNECTED:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] Disconnected!\n");
-#endif
-        break;
-    case WStype_CONNECTED:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] Connected to url: %s\n", payload);
-#endif
-        break;
-    case WStype_TEXT:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] get text: %s\n", payload);
-#endif
-        break;
-    case WStype_BIN:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] get binary length: %u\n", length);
-        hexdump(payload, length);
-        for (size_t i = 0; i < length; i++)
-        {
-            USE_SERIAL.printf("payload[%d] %d\n", i, payload[i]);
-        }
-#endif
-        {
-            uint16_t volume = 0;
-            for (size_t i = 0; i < length; i++)
-            {
-                volume += payload[i] << 8 * i;
-            }
-#ifdef DEBUG_VOLUME
-            USE_SERIAL.println(volume);
-#endif
-            // audioLeds->loop(volume);
-        }
-        break;
-    case WStype_PING:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] get ping\n");
-#endif
-        break;
-    case WStype_PONG:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[WSc] get pong\n");
-#endif
-        break;
-    default:
-        break;
-    }
-}
+WiFiUDP *udp;
 
 void setup()
 {
@@ -129,10 +69,14 @@ void setup()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        webSocketsClient = new WebSocketsClient();
-        webSocketsClient->begin(WEBSOCKETS_HOST, WEBSOCKETS_PORT);
-        webSocketsClient->onEvent(webSocketEvent);
-        webSocketsClient->setReconnectInterval(2000);
+        IPAddress broadcastAddress = IPAddress();
+        broadcastAddress.fromString(UDP_MULTICAST_IP);
+
+#ifdef DEBUG_NETWORK
+        USE_SERIAL.printf("UDP beginMulticast %s:%d\n", broadcastAddress.toString().c_str(), UDP_PORT);
+#endif
+        udp = new WiFiUDP();
+        udp->beginMulticast(WiFi.localIP(), broadcastAddress, UDP_PORT);
     }
 
     audioLeds = new AudioLeds();
@@ -143,6 +87,26 @@ void setup()
 
 void loop()
 {
-    webSocketsClient->loop();
+    int packetSize = udp->parsePacket();
+    if (packetSize)
+    {
+#ifdef DEBUG_NETWORK
+        USE_SERIAL.printf("Received %d bytes from %s, port %d\n", packetSize, udp->remoteIP().toString().c_str(), udp->remotePort());
+#endif
+        int volume = udp->read();
+#ifdef DEBUG_NETWORK
+        USE_SERIAL.printf("Received value: %d\n", volume);
+#endif
+#ifdef DEBUG_VOLUME
+        USE_SERIAL.println(volume);
+#endif
+        if (volume > 0)
+        {
+            audioLeds->loop(volume);
+            return;
+        }
+    }
+
+    audioLeds->loop(0);
 }
 #endif

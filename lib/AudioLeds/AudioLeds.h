@@ -21,7 +21,7 @@ public:
 
     void addEffect(AbstractEffect *effect);
     void nextEffect();
-    void loop(uint16_t fill_size);
+    void loop(uint8_t fill_size);
 
     AbstractEffect *getCurrentEffect();
 };

@@ -1,10 +1,8 @@
 #ifdef SERVER
-// pinout documentation found at:
-// https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <WebSocketsServer.h>
+#include <WiFiUdp.h>
 
 #include "Microphone.h"
 
@@ -13,42 +11,9 @@
 #endif
 
 Microphone *microphone;
-WebSocketsServer *webSocketsServer;
+WiFiUDP *udp;
 
-#define USE_SERIAL Serial
-
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
-{
-    switch (type)
-    {
-    case WStype_DISCONNECTED:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[%u] Disconnected!\n", num);
-#endif
-        break;
-    case WStype_CONNECTED:
-    {
-#ifdef DEBUG_NETWORK
-        IPAddress ip = webSocketsServer->remoteIP(num);
-        USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-#endif
-    }
-    break;
-    case WStype_TEXT:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
-#endif
-        break;
-    case WStype_BIN:
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("[%u] get binary length: %u\n", num, length);
-        hexdump(payload, length);
-#endif
-        break;
-    default:
-        break;
-    }
-}
+IPAddress *broadcastAddress;
 
 void setup()
 {
@@ -66,24 +31,45 @@ void setup()
     }
 #endif
 
+    WiFi.persistent(false);
+    WiFi.mode(WIFI_AP);
     WiFi.softAP(MICROPHONE_STATION_SSID, MICROPHONE_STATION_PASSWORD);
 #ifdef DEBUG_NETWORK
-    USE_SERIAL.print("AP IP:\t");
+    USE_SERIAL.print("Wifi softAPIP:\t");
     USE_SERIAL.println(WiFi.softAPIP());
+
+    USE_SERIAL.print("Wifi localIP:\t");
+    USE_SERIAL.println(WiFi.localIP());
 #endif
 
-    webSocketsServer = new WebSocketsServer(WEBSOCKETS_PORT);
-    webSocketsServer->begin();
-    webSocketsServer->onEvent(webSocketEvent);
+    broadcastAddress = new IPAddress();
+    broadcastAddress->fromString(UDP_MULTICAST_IP);
 
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.printf("UDP broadcastAddress %s:%d\n", broadcastAddress->toString().c_str(), UDP_PORT);
+#endif
+
+    udp = new WiFiUDP();
     microphone = new Microphone(16000);
 }
 
 void loop()
 {
-    webSocketsServer->loop();
+    uint8_t volume = microphone->get8BitVolume();
+    if (volume<30) return;
 
-    int volume = microphone->getVolume();
-    webSocketsServer->broadcastBIN((uint8_t *)&volume, sizeof(volume));
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.printf("UDP about to send: %d...", volume);
+#endif
+
+    udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
+    udp->write(volume);
+    udp->endPacket();
+
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.println("sent");
+#endif
+
+    delay(2);
 }
 #endif

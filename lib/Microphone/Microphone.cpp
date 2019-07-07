@@ -58,3 +58,8 @@ int Microphone::getVolume(int audio_samples)
 
     return maxsample - minsample;
 }
+
+uint8_t Microphone::get8BitVolume(int audio_samples)
+{
+    return _min(getVolume(audio_samples), 255);
+}

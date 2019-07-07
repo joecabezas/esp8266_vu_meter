@@ -11,6 +11,7 @@ public:
 
     int getSample();
     int getVolume(int audio_samples = 64);
+    uint8_t get8BitVolume(int audio_samples = 64);
 };
 
 #endif
