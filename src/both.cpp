@@ -5,16 +5,26 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
+#include "Ticker.h"
+
 #include "AudioLeds.h"
 #include "effects/RainbowEffect.h"
 
 #include "Microphone.h"
 
-#ifndef DEBUG
-#undef DEBUG_VOLUME
-#endif
-
 Microphone *microphone;
+AudioLeds *audioLeds;
+Ticker *volumeSenderTimer;
+
+void sendVolume()
+{
+    uint8_t volume = microphone->getValue();
+    // volume = 255;
+    if (!volume)
+        return;
+
+    audioLeds->setFillValue(volume);
+}
 
 void setup()
 {
@@ -23,18 +33,19 @@ void setup()
     USE_SERIAL.setDebugOutput(true);
 #endif
 
-    microphone = new Microphone(16000);
+    microphone = new Microphone();
     audioLeds = new AudioLeds();
 
     RainbowEffect *rainbowEffect = new RainbowEffect();
     audioLeds->addEffect(rainbowEffect);
+
+    volumeSenderTimer = new Ticker();
+    volumeSenderTimer->attach_ms(30, sendVolume);
 }
 
 void loop()
 {
-    uint8_t volume = microphone->get8BitVolume();
-    audioLeds->loop(volume);
-
-    delay(2);
+    microphone->loop();
+    audioLeds->loop();
 }
 #endif

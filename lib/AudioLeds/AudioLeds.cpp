@@ -39,14 +39,18 @@ void AudioLeds::nextEffect()
 #endif
 }
 
-void AudioLeds::loop(uint8_t fill_size)
+void AudioLeds::setFillValue(uint8_t fillValue)
 {
-    FastLED.delay(1000 / FRAMES_PER_SECOND);
-    getCurrentEffect()->loop(fill_size);
-    FastLED.show();
+    getCurrentEffect()->setFillValue(fillValue);
 }
 
 AbstractEffect *AudioLeds::getCurrentEffect()
 {
     return effects[currentEffectIndex];
+}
+
+void AudioLeds::loop()
+{
+    getCurrentEffect()->loop();
+    FastLED.show();
 }

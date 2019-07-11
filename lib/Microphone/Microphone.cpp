@@ -2,7 +2,7 @@
 
 #define ERROR_FAILED_TO_INITIALIZE_I2S 1
 
-Microphone::Microphone(int sample_rate)
+Microphone::Microphone(uint16_t sampleRate)
 {
     if (!i2s_rxtx_begin(true, false))
     {
@@ -12,54 +12,78 @@ Microphone::Microphone(int sample_rate)
         throw ERROR_FAILED_TO_INITIALIZE_I2S;
     }
 
-    i2s_set_rate(sample_rate);
+    i2s_set_rate(sampleRate);
+
+    sampleBuffer = new BUFFER_TYPE();
+    volumeBuffer = new BUFFER_TYPE();
+
+    sampleBufferStats = new BufferStats();
+    volumeBufferStats = new BufferStats();
 }
 
-int Microphone::getSample()
+void Microphone::loop(uint16_t samples)
 {
-    int16_t l, r;
-    i2s_read_sample(&l, &r, true);
-    return l;
+    int16_t l;
+    if (i2s_read_sample(&l, 0, false))
+        addSampleToBuffer(sampleBuffer, samples, l);
+
+    addSampleToBuffer(volumeBuffer, samples, getVolume());
 }
 
-int Microphone::getVolume(int audio_samples)
+void Microphone::addSampleToBuffer(BUFFER_TYPE *buffer, uint16_t max_samples, BUFFER_ITEM_TYPE sample)
 {
-    // read a bunch of samples:
-    int samples[audio_samples];
+    //make room for new sample
+    while (buffer->size() >= max_samples)
+        buffer->pop_front();
 
-    for (int i = 0; i < audio_samples; i++)
-    {
-        samples[i] = getSample();
-    }
-
-    // ok we have the samples, get the mean (avg)
-    float meanval = 0;
-    for (int i = 0; i < audio_samples; i++)
-    {
-        meanval += samples[i];
-    }
-    meanval /= audio_samples;
-
-    // subtract it from all sapmles to get a 'normalized' output
-    for (int i = 0; i < audio_samples; i++)
-    {
-        samples[i] -= meanval;
-    }
-
-    // find the 'peak to peak' max
-    float maxsample, minsample;
-    minsample = 100000;
-    maxsample = -100000;
-    for (int i = 0; i < audio_samples; i++)
-    {
-        minsample = _min(minsample, samples[i]);
-        maxsample = _max(maxsample, samples[i]);
-    }
-
-    return maxsample - minsample;
+    //insert new sample
+    buffer->push_back(sample);
 }
 
-uint8_t Microphone::get8BitVolume(int audio_samples)
+BUFFER_ITEM_TYPE Microphone::getVolume()
 {
-    return _min(getVolume(audio_samples), 255);
+    calculateStatsForBuffer(sampleBuffer, sampleBufferStats);
+    int16_t diff = sampleBufferStats->max - sampleBufferStats->min;
+    return diff > 0 ? diff : -diff;
+}
+
+void Microphone::calculateStatsForBuffer(BUFFER_TYPE *buffer, BufferStats *bufferStats)
+{
+    bufferStats->max = std::numeric_limits<BUFFER_ITEM_TYPE>::min();
+    bufferStats->min = std::numeric_limits<BUFFER_ITEM_TYPE>::max();
+    float average = 0;
+    for (size_t i = 0; i < buffer->size(); i++)
+    {
+        bufferStats->max = _max((*buffer)[i], bufferStats->max);
+        bufferStats->min = _min((*buffer)[i], bufferStats->min);
+        average += (*buffer)[i] / buffer->size();
+    }
+    bufferStats->average = average;
+}
+
+uint8_t Microphone::getValue()
+{
+    calculateStatsForBuffer(volumeBuffer, volumeBufferStats);
+    uint8_t value =
+        constrain(
+            map(volumeBufferStats->average, 30, 600, 0, 255),
+            0,
+            255);
+
+#ifdef DEBUG_MICROPHONE
+    USE_SERIAL.print(255);
+    USE_SERIAL.print(",");
+    USE_SERIAL.print(value);
+    USE_SERIAL.print(",");
+    USE_SERIAL.print(getVolume());
+    USE_SERIAL.print(",");
+    USE_SERIAL.print(volumeBufferStats->average);
+    USE_SERIAL.print(",");
+    USE_SERIAL.print(volumeBufferStats->max);
+    USE_SERIAL.print(",");
+    USE_SERIAL.print(volumeBufferStats->min);
+    USE_SERIAL.println();
+#endif
+
+    return value;
 }

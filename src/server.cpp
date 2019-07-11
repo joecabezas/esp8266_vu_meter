@@ -4,6 +4,8 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
+#include "Ticker.h"
+
 #include "Microphone.h"
 
 #ifndef DEBUG
@@ -12,8 +14,28 @@
 
 Microphone *microphone;
 WiFiUDP *udp;
+Ticker *volumeSenderTimer;
 
 IPAddress *broadcastAddress;
+
+void sendVolume()
+{
+    uint8_t volume = microphone->getValue();
+    if (!volume)
+        return;
+
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.printf("UDP about to send: %d...", volume);
+#endif
+
+    udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
+    udp->write(volume);
+    udp->endPacket();
+
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.println("sent");
+#endif
+}
 
 void setup()
 {
@@ -50,26 +72,14 @@ void setup()
 #endif
 
     udp = new WiFiUDP();
-    microphone = new Microphone(16000);
+    microphone = new Microphone();
+
+    volumeSenderTimer = new Ticker();
+    volumeSenderTimer->attach_ms(30, sendVolume);
 }
 
 void loop()
 {
-    uint8_t volume = microphone->get8BitVolume();
-    if (volume<30) return;
-
-#ifdef DEBUG_NETWORK
-    USE_SERIAL.printf("UDP about to send: %d...", volume);
-#endif
-
-    udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
-    udp->write(volume);
-    udp->endPacket();
-
-#ifdef DEBUG_NETWORK
-    USE_SERIAL.println("sent");
-#endif
-
-    delay(2);
+    microphone->loop();
 }
 #endif

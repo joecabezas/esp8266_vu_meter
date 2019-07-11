@@ -12,7 +12,7 @@
 
 #ifndef DEBUG
 #undef DEBUG_NETWORK
-#undef DEBUG_VOLUME
+#undef DEBUG_MICROPHONE
 #endif
 
 AudioLeds *audioLeds;
@@ -67,6 +67,7 @@ void setup()
     USE_SERIAL.println(WiFi.status());
 #endif
 
+    //todo: check if this if is necessary
     if (WiFi.status() == WL_CONNECTED)
     {
         IPAddress broadcastAddress = IPAddress();
@@ -87,6 +88,8 @@ void setup()
 
 void loop()
 {
+    audioLeds->loop();
+
     int packetSize = udp->parsePacket();
     if (packetSize)
     {
@@ -97,16 +100,14 @@ void loop()
 #ifdef DEBUG_NETWORK
         USE_SERIAL.printf("Received value: %d\n", volume);
 #endif
-#ifdef DEBUG_VOLUME
+        if (volume <= 0)
+            return;
+
+#ifdef DEBUG_MICROPHONE
         USE_SERIAL.println(volume);
 #endif
-        if (volume > 0)
-        {
-            audioLeds->loop(volume);
-            return;
-        }
-    }
 
-    audioLeds->loop(0);
+        audioLeds->setFillValue(volume);
+    }
 }
 #endif

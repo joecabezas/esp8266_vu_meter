@@ -9,8 +9,10 @@ class RainbowEffect: public AbstractEffect
 {
     private:
         uint8_t hue;
+        float fillValue;
     public:
-        virtual void loop(uint8_t fill_size) override;
+        virtual void setFillValue(uint8_t fillValue) override;
+        virtual void loop() override;
 };
 
 #endif
