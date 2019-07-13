@@ -8,6 +8,7 @@
 
 #include "AudioLeds.h"
 #include "effects/RainbowEffect.h"
+#include "effects/SolidEffect.h"
 
 #ifndef DEBUG
 #undef DEBUG_NETWORK
@@ -33,6 +34,9 @@ void setup()
         delay(1000);
     }
 #endif
+
+    WiFi.persistent(false);
+    WiFi.disconnect(true);
 
     //The following line is fucking important and not documented anywhere
     //after a 3 year (and ongoing) issue, finally somebody came with this
@@ -69,20 +73,30 @@ void setup()
     //todo: check if this if is necessary
     if (WiFi.status() == WL_CONNECTED)
     {
+        udp = new WiFiUDP();
+#ifdef UDP_MODE_BROADCAST
         IPAddress broadcastAddress = IPAddress();
         broadcastAddress.fromString(UDP_MULTICAST_IP);
+
+        udp->beginMulticast(WiFi.localIP(), broadcastAddress, UDP_PORT);
 
 #ifdef DEBUG_NETWORK
         USE_SERIAL.printf("UDP beginMulticast %s:%d\n", broadcastAddress.toString().c_str(), UDP_PORT);
 #endif
-        udp = new WiFiUDP();
-        udp->beginMulticast(WiFi.localIP(), broadcastAddress, UDP_PORT);
+#else
+        udp->begin(UDP_PORT);
+#endif
     }
 
     audioLeds = new AudioLeds();
 
+    SolidEffect *solidEffect = new SolidEffect();
+    audioLeds->addEffect(solidEffect);
+
     RainbowEffect *rainbowEffect = new RainbowEffect();
     audioLeds->addEffect(rainbowEffect);
+
+    audioLeds->nextEffect();
 }
 
 void loop()

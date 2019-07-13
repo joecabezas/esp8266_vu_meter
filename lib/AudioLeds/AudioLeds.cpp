@@ -1,13 +1,27 @@
 #include "AudioLeds.h"
 
-#define DATA_PIN 5
-#define NUM_LEDS 144
+#ifndef LEDS_DATA_PIN
+#define LEDS_DATA_PIN 5
+#endif
 
+#ifndef NUMBER_OF_LEDS
+#define NUMBER_OF_LEDS 100
+#endif
+
+#ifndef LED_TYPE
 #define LED_TYPE WS2812B
-#define COLOR_ORDER GRB
+#endif
 
+#ifndef COLOR_ORDER
+#define COLOR_ORDER GRB
+#endif
+
+#ifndef BRIGHTNESS
 #define BRIGHTNESS 96
-#define FRAMES_PER_SECOND 120
+#endif
+
+#define FASTLED_INTERRUPT_RETRY_COUNT 0
+#define FASTLED_ALLOW_INTERRUPTS 0
 
 #define DEBUG
 
@@ -15,9 +29,9 @@ AudioLeds::AudioLeds()
 {
     currentEffectIndex = 0;
 
-    leds = new CRGB[NUM_LEDS];
+    leds = new CRGB[NUMBER_OF_LEDS];
     FastLED
-        .addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS)
+        .addLeds<LED_TYPE, LEDS_DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS)
         .setCorrection(TypicalLEDStrip);
 
     FastLED.setBrightness(BRIGHTNESS);

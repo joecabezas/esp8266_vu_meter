@@ -15,7 +15,12 @@ Microphone *microphone;
 WiFiUDP *udp;
 Ticker *volumeSenderTimer;
 
+#ifdef UDP_MODE_BROADCAST
 IPAddress *broadcastAddress;
+#else
+#include <vector>
+std::vector<IPAddress *> *clients;
+#endif
 
 void sendVolume()
 {
@@ -27,9 +32,18 @@ void sendVolume()
     USE_SERIAL.printf("UDP about to send: %d...", volume);
 #endif
 
+#ifdef UDP_MODE_BROADCAST
     udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
     udp->write(volume);
     udp->endPacket();
+#else
+    for (size_t i = 0; i < clients->size(); i++)
+    {
+        udp->beginPacket(*(clients->at(i)), UDP_PORT);
+        udp->write(volume);
+        udp->endPacket();
+    }
+#endif
 
 #ifdef DEBUG_NETWORK
     USE_SERIAL.println("sent");
@@ -39,7 +53,7 @@ void sendVolume()
 void setup()
 {
 #ifdef DEBUG
-    USE_SERIAL.begin(9600);
+    USE_SERIAL.begin(115200);
     USE_SERIAL.setDebugOutput(true);
 #endif
 
@@ -53,8 +67,11 @@ void setup()
 #endif
 
     WiFi.persistent(false);
+    WiFi.disconnect(true);
+
     WiFi.mode(WIFI_AP);
     WiFi.softAP(MICROPHONE_STATION_SSID, MICROPHONE_STATION_PASSWORD);
+
 #ifdef DEBUG_NETWORK
     USE_SERIAL.print("Wifi softAPIP:\t");
     USE_SERIAL.println(WiFi.softAPIP());
@@ -63,11 +80,22 @@ void setup()
     USE_SERIAL.println(WiFi.localIP());
 #endif
 
+#ifdef UDP_MODE_BROADCAST
     broadcastAddress = new IPAddress();
     broadcastAddress->fromString(UDP_MULTICAST_IP);
 
 #ifdef DEBUG_NETWORK
     USE_SERIAL.printf("UDP broadcastAddress %s:%d\n", broadcastAddress->toString().c_str(), UDP_PORT);
+#endif
+#else
+    clients = new std::vector<IPAddress *>();
+    for (size_t i = 0; i < NUMBER_OF_CLIENTS; i++)
+    {
+        clients->push_back(new IPAddress(192, 168, 4, 2 + i));
+#ifdef DEBUG
+        printf("added IP: %s\n", clients->back()->toString().c_str());
+#endif
+    }
 #endif
 
     udp = new WiFiUDP();
