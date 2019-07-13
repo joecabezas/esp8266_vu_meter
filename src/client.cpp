@@ -2,7 +2,6 @@
 // pinout documentation found at:
 // https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
 
-#include <Arduino.h>
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -21,7 +20,7 @@ WiFiUDP *udp;
 void setup()
 {
 #ifdef DEBUG
-    USE_SERIAL.begin(9600);
+    USE_SERIAL.begin(115200);
 #endif
 
 #ifdef DEBUG_NETWORK
@@ -109,5 +108,10 @@ void loop()
 
         audioLeds->setFillValue(volume);
     }
+
+#ifdef DEBUG_MICROPHONE
+    else
+        USE_SERIAL.println(0);
+#endif
 }
 #endif

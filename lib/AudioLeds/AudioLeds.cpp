@@ -1,7 +1,7 @@
 #include "AudioLeds.h"
 
 #define DATA_PIN 5
-#define NUM_LEDS 18
+#define NUM_LEDS 144
 
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
@@ -25,6 +25,10 @@ AudioLeds::AudioLeds()
 
 void AudioLeds::addEffect(AbstractEffect *effect)
 {
+
+    if (effects.empty())
+        currentEffect = effect;
+
     effects.push_back(effect);
 }
 
@@ -33,7 +37,8 @@ void AudioLeds::nextEffect()
 #ifdef DEBUG
     Serial.println("nextEffect: " + currentEffectIndex);
 #endif
-    currentEffectIndex = (currentEffectIndex == effects.size()) ? 0 : currentEffectIndex + 1;
+    currentEffectIndex = (currentEffectIndex == (effects.size() - 1)) ? 0 : currentEffectIndex + 1;
+    currentEffect = effects[currentEffectIndex];
 #ifdef DEBUG
     Serial.println("nextEffect: " + currentEffectIndex);
 #endif
@@ -41,16 +46,15 @@ void AudioLeds::nextEffect()
 
 void AudioLeds::setFillValue(uint8_t fillValue)
 {
-    getCurrentEffect()->setFillValue(fillValue);
-}
-
-AbstractEffect *AudioLeds::getCurrentEffect()
-{
-    return effects[currentEffectIndex];
+    currentEffect->setFillValue(fillValue);
 }
 
 void AudioLeds::loop()
 {
-    getCurrentEffect()->loop();
-    FastLED.show();
+    currentEffect->loop();
+
+    //this calls FastLED.show() as noted in docs
+    //but I am noting this here if I ever search
+    //for the show function call
+    FastLED.delay(1);
 }

@@ -1,10 +1,13 @@
 #include "RainbowEffect.h"
 
-#define FADE_BY 15
-#define DELTA_HUE 7
+#define FADE_BY 20
+#define DELTA_HUE 3
 
-#define HUE_VELOCITY 1
-#define FILL_VALUE_VELOCITY (-FastLED.size() * 0.22f)
+#define HUE_VELOCITY 3
+#define FILL_VALUE_VELOCITY -35
+
+#define FASTLED_INTERRUPT_RETRY_COUNT 0
+#define FASTLED_ALLOW_INTERRUPTS 0
 
 void RainbowEffect::setFillValue(uint8_t a_fillValue)
 {

@@ -14,17 +14,17 @@ private:
     CRGB *leds;
 
     std::vector<AbstractEffect *> effects;
-    uint currentEffectIndex;
+    uint8_t currentEffectIndex;
 
 public:
     AudioLeds();
+
+    AbstractEffect *currentEffect;
 
     void addEffect(AbstractEffect *effect);
     void nextEffect();
     void setFillValue(uint8_t fillValue);
     void loop();
-
-    AbstractEffect *getCurrentEffect();
 };
 
 #endif

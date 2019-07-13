@@ -37,7 +37,7 @@ private:
 public:
     Microphone(uint16_t sampleRate = 16000);
 
-    void loop(uint16_t samples = 32);
+    void loop(uint16_t samples = 12);
     uint8_t getValue();
 };
 #endif
