@@ -23,7 +23,7 @@ public:
 
     void addEffect(AbstractEffect *effect);
     void nextEffect();
-    void setFillValue(uint8_t fillValue);
+    void setInputValue(uint8_t inputValue);
     void loop();
 };
 

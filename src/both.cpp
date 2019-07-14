@@ -8,6 +8,8 @@
 
 #include "AudioLeds.h"
 #include "effects/RainbowEffect.h"
+#include "effects/SolidEffect.h"
+#include "effects/RainbowVelocityEffect.h"
 
 #include "Microphone.h"
 
@@ -17,11 +19,16 @@ Ticker *volumeSenderTimer;
 
 void sendVolume()
 {
+#ifdef TEST_EFFECTS
+    audioLeds->setInputValue(255);
+    return;
+#endif
+
     uint8_t volume = microphone->getValue();
     if (!volume)
         return;
 
-    audioLeds->setFillValue(volume);
+    audioLeds->setInputValue(volume);
 }
 
 void setup()
@@ -34,8 +41,12 @@ void setup()
     microphone = new Microphone();
     audioLeds = new AudioLeds();
 
-    RainbowEffect *rainbowEffect = new RainbowEffect();
-    audioLeds->addEffect(rainbowEffect);
+    audioLeds->addEffect(new RainbowEffect());
+    audioLeds->addEffect(new SolidEffect());
+    audioLeds->addEffect(new RainbowVelocityEffect());
+
+    audioLeds->nextEffect();
+    audioLeds->nextEffect();
 
     volumeSenderTimer = new Ticker();
     volumeSenderTimer->attach_ms(30, sendVolume);

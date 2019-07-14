@@ -4,9 +4,9 @@
 class AbstractEffect
 {
     protected:
-        CRGB *leds;
+        float input;
     public:
-        virtual void setFillValue(uint8_t fillValue);
+        virtual void setInputValue(uint8_t inputValue);
         virtual void loop();
 };
 

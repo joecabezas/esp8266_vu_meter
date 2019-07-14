@@ -58,9 +58,9 @@ void AudioLeds::nextEffect()
 #endif
 }
 
-void AudioLeds::setFillValue(uint8_t fillValue)
+void AudioLeds::setInputValue(uint8_t fillValue)
 {
-    currentEffect->setFillValue(fillValue);
+    currentEffect->setInputValue(fillValue);
 }
 
 void AudioLeds::loop()

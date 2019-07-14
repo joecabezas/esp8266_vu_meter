@@ -5,9 +5,9 @@
 #define FADE_BY 20
 #define FILL_VALUE_VELOCITY -5
 
-void SolidEffect::setFillValue(uint8_t a_fillValue)
+void SolidEffect::setInputValue(uint8_t inputValue)
 {
-    fillValue = _max(fillValue, (float)a_fillValue);
+    input = _max(inputValue, (float)inputValue);
 }
 
 void SolidEffect::loop()
@@ -16,7 +16,7 @@ void SolidEffect::loop()
     fill_solid(FastLED.leds(),
                _min(
                    FastLED.size(),
-                   map((uint8_t)fillValue, 0, 255, -1, FastLED.size())),
+                   map((uint8_t)input, 0, 255, -1, FastLED.size())),
                SOLID_EFFECT_COLOR);
-    fillValue = _max(0.0f, fillValue + FILL_VALUE_VELOCITY);
+    input = _max(0.0f, input + FILL_VALUE_VELOCITY);
 }

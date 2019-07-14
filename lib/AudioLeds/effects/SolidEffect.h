@@ -6,10 +6,8 @@
 
 class SolidEffect: public AbstractEffect
 {
-    private:
-        float fillValue;
     public:
-        virtual void setFillValue(uint8_t fillValue) override;
+        virtual void setInputValue(uint8_t fillValue) override;
         virtual void loop() override;
 };
 

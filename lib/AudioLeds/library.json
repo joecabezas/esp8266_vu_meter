@@ -1,8 +1,13 @@
 {
-    "name": "Microphone",
+    "name": "AudioLeds",
     "authors": {
         "name": "Joe Cabezas Campos",
         "email": "joe.cabezas@gmail.com",
         "url": "https://www.linkedin.com/in/joecabezas/"
-    }
+    },
+    "dependencies": [
+        {
+            "name": "MathUtils"
+        }
+    ]
 }

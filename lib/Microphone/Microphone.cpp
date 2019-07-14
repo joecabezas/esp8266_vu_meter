@@ -1,15 +1,13 @@
 #include "Microphone.h"
 
-#define ERROR_FAILED_TO_INITIALIZE_I2S 1
-
 Microphone::Microphone(uint16_t sampleRate)
 {
     if (!i2s_rxtx_begin(true, false))
     {
 #ifdef DEBUG
-        Serial.println("Failed to initialize I2S!");
+        while (true)
+            Serial.println("Failed to initialize I2S!");
 #endif
-        throw ERROR_FAILED_TO_INITIALIZE_I2S;
     }
 
     i2s_set_rate(sampleRate);
