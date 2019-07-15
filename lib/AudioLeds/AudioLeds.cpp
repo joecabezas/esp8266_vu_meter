@@ -49,13 +49,10 @@ void AudioLeds::addEffect(AbstractEffect *effect)
 void AudioLeds::nextEffect()
 {
 #ifdef DEBUG
-    Serial.println("nextEffect: " + currentEffectIndex);
+    Serial.println("nextEffect");
 #endif
     currentEffectIndex = (currentEffectIndex == (effects.size() - 1)) ? 0 : currentEffectIndex + 1;
     currentEffect = effects[currentEffectIndex];
-#ifdef DEBUG
-    Serial.println("nextEffect: " + currentEffectIndex);
-#endif
 }
 
 void AudioLeds::setInputValue(uint8_t fillValue)

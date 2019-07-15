@@ -64,7 +64,7 @@ uint8_t Microphone::getValue()
     calculateStatsForBuffer(volumeBuffer, volumeBufferStats);
     uint8_t value =
         constrain(
-            map(volumeBufferStats->average, 30, 600, 0, 255),
+            map(volumeBufferStats->average, MICROPHONE_VALUE_MIN, MICROPHONE_VALUE_MAX, 0, 255),
             0,
             255);
 

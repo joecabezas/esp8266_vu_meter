@@ -1,6 +1,8 @@
 #ifndef ABSTACT_EFFECT_H
 #define ABSTACT_EFFECT_H
 
+#include <Arduino.h>
+
 class AbstractEffect
 {
     protected:

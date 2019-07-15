@@ -10,6 +10,8 @@
 #include "effects/RainbowEffect.h"
 #include "effects/SolidEffect.h"
 #include "effects/RainbowVelocityEffect.h"
+#include "effects/GradientEffect.h"
+#include "effects/FireEffect.h"
 
 #include "Microphone.h"
 
@@ -34,7 +36,7 @@ void sendVolume()
 void setup()
 {
 #ifdef DEBUG
-    USE_SERIAL.begin(115200);
+    USE_SERIAL.begin(SERIAL_BAUD);
     USE_SERIAL.setDebugOutput(true);
 #endif
 
@@ -44,7 +46,11 @@ void setup()
     audioLeds->addEffect(new RainbowEffect());
     audioLeds->addEffect(new SolidEffect());
     audioLeds->addEffect(new RainbowVelocityEffect());
+    audioLeds->addEffect(new GradientEffect());
+    audioLeds->addEffect(new FireEffect());
 
+    audioLeds->nextEffect();
+    audioLeds->nextEffect();
     audioLeds->nextEffect();
     audioLeds->nextEffect();
 
