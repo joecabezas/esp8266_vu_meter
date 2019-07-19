@@ -1,5 +1,5 @@
-#ifndef MULTIPLE_COLORS_EFFECT_H
-#define MULTIPLE_COLORS_EFFECT_H
+#ifndef GRADIENT_EFFECT_H
+#define GRADIENT_EFFECT_H
 
 #include "BaseVUEffect.h"
 

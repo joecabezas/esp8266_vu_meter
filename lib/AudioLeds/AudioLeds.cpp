@@ -48,9 +48,10 @@ void AudioLeds::addEffect(AbstractEffect *effect)
 
 void AudioLeds::nextEffect()
 {
-#ifdef DEBUG
+#ifdef DEBUG_AUDIO_LEDS
     Serial.println("nextEffect");
 #endif
+
     currentEffectIndex = (currentEffectIndex == (effects.size() - 1)) ? 0 : currentEffectIndex + 1;
     currentEffect = effects[currentEffectIndex];
 }

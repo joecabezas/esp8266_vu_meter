@@ -1,8 +1,4 @@
 #ifdef BOTH
-// pinout documentation found at:
-// https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
-
-#include <FastLED.h>
 
 #include "Ticker.h"
 
@@ -12,6 +8,7 @@
 #include "effects/RainbowVelocityEffect.h"
 #include "effects/GradientEffect.h"
 #include "effects/FireEffect.h"
+#include "effects/BouncingParticleEffect/BouncingParticleEffect.h"
 
 #include "Microphone.h"
 
@@ -48,7 +45,9 @@ void setup()
     audioLeds->addEffect(new RainbowVelocityEffect());
     audioLeds->addEffect(new GradientEffect());
     audioLeds->addEffect(new FireEffect());
+    audioLeds->addEffect(new BouncingParticleEffect());
 
+    audioLeds->nextEffect();
     audioLeds->nextEffect();
     audioLeds->nextEffect();
     audioLeds->nextEffect();
