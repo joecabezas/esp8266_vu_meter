@@ -8,7 +8,9 @@ class BaseEffect : public AbstractEffect
 {
 protected:
     virtual void clean();
+    virtual void updateInput();
     virtual void fill();
+
     uint8_t getFillValue();
 
 public:

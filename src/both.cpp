@@ -3,11 +3,11 @@
 #include "Ticker.h"
 
 #include "AudioLeds.h"
-#include "effects/RainbowEffect.h"
-#include "effects/SolidEffect.h"
-#include "effects/RainbowVelocityEffect.h"
-#include "effects/GradientEffect.h"
-#include "effects/FireEffect.h"
+#include "effects/RainbowEffect/RainbowEffect.h"
+#include "effects/SolidEffect/SolidEffect.h"
+#include "effects/RainbowVelocityEffect/RainbowVelocityEffect.h"
+#include "effects/GradientEffect/GradientEffect.h"
+#include "effects/FireEffect/FireEffect.h"
 #include "effects/BouncingParticleEffect/BouncingParticleEffect.h"
 
 #include "Microphone.h"

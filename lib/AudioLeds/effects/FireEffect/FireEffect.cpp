@@ -1,5 +1,7 @@
 #include "FireEffect.h"
 
+#define FIRE_EFFECT_FRAME_DELAY 30
+
 // FireEffect, code taken and adapted from latest version of FastLED examples:
 // https://github.com/FastLED/FastLED/blob/962b1205a7824ff79e2e585f221759accb2ecfd9/examples/Fire2012WithPalette/Fire2012WithPalette.ino
 
@@ -34,28 +36,37 @@
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 55, suggested range 20-100
-#define COOLING 55
+#define COOLING 60
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-#define SPARKING 120
+#define SPARKING 50
 
-FireEffect::FireEffect()
+FireEffect::FireEffect() : FireEffect(HeatColors_p) {}
+
+FireEffect::FireEffect(CRGBPalette16 _pallete)
 {
+    // pallete = _pallete;
     // This first palette is the basic 'black body radiation' colors,
     // which run from black to red to bright yellow to white.
-    gPal = HeatColors_p;
+    pallete = HeatColors_p;
 
     // These are other ways to set up the color palette for the 'fire'.
     // First, a gradient from black to red to yellow to white -- similar to HeatColors_p
-    //   gPal = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::Yellow, CRGB::White);
+    //   pallete = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::Yellow, CRGB::White);
 
     // Second, this palette is like the heat colors, but blue/aqua instead of red/yellow
-    //   gPal = CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
+    //   pallete = CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
 
     // Third, here's a simpler, three-step gradient, from black to red to white
-    //   gPal = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::White);
+    //   pallete = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::White);
+
+    millisecondsPassed = millis();
+}
+
+void FireEffect::setInputValue(uint8_t inputValue)
+{
 }
 
 void FireEffect::Fire2012WithPalette()
@@ -88,7 +99,7 @@ void FireEffect::Fire2012WithPalette()
         // Scale the heat value from 0-255 down to 0-240
         // for best results with color palettes.
         byte colorindex = scale8(heat[j], 240);
-        CRGB color = ColorFromPalette(gPal, colorindex);
+        CRGB color = ColorFromPalette(pallete, colorindex);
         int pixelnumber;
         if (gReverseDirection)
         {
@@ -102,14 +113,19 @@ void FireEffect::Fire2012WithPalette()
     }
 }
 
-void FireEffect::fill()
+void FireEffect::loop()
 {
-    // Add entropy to random number generator; we use a lot of it.
-    random16_add_entropy(random(0,100));
+    if (millis() - millisecondsPassed > FIRE_EFFECT_FRAME_DELAY)
+    {
+        millisecondsPassed = millis();
 
-    Fire2012WithPalette(); // run simulation frame, using palette colors
+        // Add entropy to random number generator; we use a lot of it.
+        random16_add_entropy(random(0, 100));
+
+        Fire2012WithPalette(); // run simulation frame, using palette colors
 
 #ifdef DEBUG_EFFECT
-    USE_SERIAL.println(getFillValue());
+        USE_SERIAL.println(getFillValue());
 #endif
+    }
 }

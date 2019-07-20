@@ -34,6 +34,7 @@ private:
     void tick();
 
 protected:
+    virtual void loop() override;
     virtual void fill() override;
 
 public:

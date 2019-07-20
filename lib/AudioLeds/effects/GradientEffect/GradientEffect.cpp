@@ -1,5 +1,7 @@
 #include "GradientEffect.h"
 
+#define FADE_BY 10
+
 GradientEffect::GradientEffect()
 {
     //put as many colors as you want
@@ -12,7 +14,7 @@ GradientEffect::GradientEffect()
 void GradientEffect::fill()
 {
     //draw gradients
-    uint16_t d = FastLED.size() / (colors->size() - 1);
+    uint16_t d = NUMBER_OF_LEDS / (colors->size() - 1);
     for (size_t i = 0; i < (colors->size() - 1); i++)
     {
         uint16_t startIndex = d * i;
@@ -22,9 +24,9 @@ void GradientEffect::fill()
     }
 
     //turn off remainder after fillValue
-    fill_solid(&(FastLED.leds()[getFillValue()]), FastLED.size() - getFillValue(), CRGB::Black);
+    fill_solid(&(FastLED.leds()[getFillValue()]), NUMBER_OF_LEDS - getFillValue(), CRGB::Black);
 
-#ifdef DEBUG_EFFECT
-    USE_SERIAL.println(getFillValue());
-#endif
+// #ifdef DEBUG_EFFECT
+//     USE_SERIAL.println(getFillValue());
+// #endif
 }
