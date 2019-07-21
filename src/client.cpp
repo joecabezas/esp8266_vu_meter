@@ -143,12 +143,13 @@ void setup()
     }
 
     audioLeds = new AudioLeds();
+    audioLeds->addEffect(new FireEffect(CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White)));
+    audioLeds->addEffect(new FireEffect());
     audioLeds->addEffect(new RainbowEffect());
     audioLeds->addEffect(new BouncingParticleEffect());
     audioLeds->addEffect(new SolidEffect());
     audioLeds->addEffect(new GradientEffect());
     audioLeds->addEffect(new RainbowVelocityEffect());
-    audioLeds->addEffect(new FireEffect());
 }
 
 void loop()
