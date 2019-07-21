@@ -122,10 +122,6 @@ void FireEffect::loop()
         // Add entropy to random number generator; we use a lot of it.
         random16_add_entropy(random(0, 100));
 
-        Fire2012WithPalette(); // run simulation frame, using palette colors
-
-#ifdef DEBUG_EFFECT
-        USE_SERIAL.println(getFillValue());
-#endif
+        Fire2012WithPalette();
     }
 }

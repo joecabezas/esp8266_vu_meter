@@ -3,7 +3,7 @@
 
 #include "effects/BaseEffect.h"
 
-#include <vector>
+#include <deque>
 
 class BouncingParticle
 {
@@ -26,7 +26,7 @@ public:
 class BouncingParticleEffect : public BaseEffect
 {
 private:
-    std::vector<BouncingParticle *> *particles;
+    std::deque<BouncingParticle *> *particles;
     uint32_t millisecondsPassed;
     uint32_t millisecondsSinceLastParticle;
 

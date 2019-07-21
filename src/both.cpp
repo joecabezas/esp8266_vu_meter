@@ -1,6 +1,7 @@
 #ifdef BOTH
 
 #include "Ticker.h"
+#include "OneButton.h"
 
 #include "AudioLeds.h"
 #include "effects/RainbowEffect/RainbowEffect.h"
@@ -15,11 +16,17 @@
 Microphone *microphone;
 AudioLeds *audioLeds;
 Ticker *volumeSenderTimer;
+OneButton *button;
+
+#ifdef TEST_EFFECTS
+uint8_t theta;
+#endif
 
 void sendVolume()
 {
 #ifdef TEST_EFFECTS
-    audioLeds->setInputValue(255);
+    theta += 10;
+    audioLeds->setInputValue(sin8(theta));
     return;
 #endif
 
@@ -30,6 +37,16 @@ void sendVolume()
     audioLeds->setInputValue(volume);
 }
 
+void previousEffect()
+{
+    audioLeds->previousEffect();
+}
+
+void nextEffect()
+{
+    audioLeds->nextEffect();
+}
+
 void setup()
 {
 #ifdef DEBUG
@@ -38,8 +55,12 @@ void setup()
 #endif
 
     microphone = new Microphone();
-    audioLeds = new AudioLeds();
 
+    button = new OneButton(BUTTON_NEXT_EFFECT_PIN, true);
+    button->attachDoubleClick(previousEffect);
+    button->attachClick(nextEffect);
+
+    audioLeds = new AudioLeds();
     audioLeds->addEffect(new RainbowEffect());
     audioLeds->addEffect(new SolidEffect());
     audioLeds->addEffect(new RainbowVelocityEffect());
@@ -47,18 +68,13 @@ void setup()
     audioLeds->addEffect(new FireEffect());
     audioLeds->addEffect(new BouncingParticleEffect());
 
-    audioLeds->nextEffect();
-    audioLeds->nextEffect();
-    audioLeds->nextEffect();
-    audioLeds->nextEffect();
-    audioLeds->nextEffect();
-
     volumeSenderTimer = new Ticker();
     volumeSenderTimer->attach_ms(30, sendVolume);
 }
 
 void loop()
 {
+    button->tick();
     microphone->loop();
     audioLeds->loop();
 }

@@ -2,13 +2,18 @@
 // pinout documentation found at:
 // https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
 
-#include <FastLED.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
+#include "NetworkPacket.h"
+
 #include "AudioLeds.h"
-#include "effects/RainbowEffect.h"
-#include "effects/SolidEffect.h"
+#include "effects/RainbowEffect/RainbowEffect.h"
+#include "effects/SolidEffect/SolidEffect.h"
+#include "effects/RainbowVelocityEffect/RainbowVelocityEffect.h"
+#include "effects/GradientEffect/GradientEffect.h"
+#include "effects/FireEffect/FireEffect.h"
+#include "effects/BouncingParticleEffect/BouncingParticleEffect.h"
 
 #ifndef DEBUG
 #undef DEBUG_NETWORK
@@ -17,6 +22,55 @@
 
 AudioLeds *audioLeds;
 WiFiUDP *udp;
+NetworkPacket packet;
+
+void readMicData(uint8_t volume)
+{
+    if (volume <= 0)
+        return;
+
+#ifdef DEBUG_MICROPHONE
+    USE_SERIAL.println(volume);
+#endif
+
+    audioLeds->setInputValue(volume);
+}
+
+void previousEffect()
+{
+    audioLeds->previousEffect();
+}
+
+void nextEffect()
+{
+    audioLeds->nextEffect();
+}
+
+void getPacket()
+{
+    int packetSize = udp->parsePacket();
+    if (packetSize)
+    {
+#ifdef DEBUG_NETWORK
+        USE_SERIAL.printf("Received %d bytes from %s, port %d\n", packetSize, udp->remoteIP().toString().c_str(), udp->remotePort());
+#endif
+
+        udp->read((char *)&packet, sizeof(struct NetworkPacket));
+
+#ifdef DEBUG_NETWORK
+        USE_SERIAL.printf("Received packet: %d, %d\n", packet.command, packet.data);
+#endif
+
+        if (packet.command == COMMAND_MIC_DATA)
+            readMicData(packet.data);
+
+        if (packet.command == COMMAND_PREVIOUS_EFFECT)
+            previousEffect();
+
+        if (packet.command == COMMAND_NEXT_EFFECT)
+            nextEffect();
+    }
+}
 
 void setup()
 {
@@ -27,7 +81,7 @@ void setup()
 #ifdef DEBUG_NETWORK
     USE_SERIAL.setDebugOutput(true);
 
-    for (uint8_t t = 4; t > 0; t--)
+    for (uint8_t t = 1; t > 0; t--)
     {
         USE_SERIAL.printf("[SETUP] BOOT WAIT %d...\n", t);
         USE_SERIAL.flush();
@@ -89,43 +143,17 @@ void setup()
     }
 
     audioLeds = new AudioLeds();
-
-    SolidEffect *solidEffect = new SolidEffect();
-    audioLeds->addEffect(solidEffect);
-
-    RainbowEffect *rainbowEffect = new RainbowEffect();
-    audioLeds->addEffect(rainbowEffect);
-
-    audioLeds->nextEffect();
+    audioLeds->addEffect(new BouncingParticleEffect());
+    audioLeds->addEffect(new RainbowEffect());
+    audioLeds->addEffect(new SolidEffect());
+    audioLeds->addEffect(new RainbowVelocityEffect());
+    audioLeds->addEffect(new GradientEffect());
+    audioLeds->addEffect(new FireEffect());
 }
 
 void loop()
 {
     audioLeds->loop();
-
-    int packetSize = udp->parsePacket();
-    if (packetSize)
-    {
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("Received %d bytes from %s, port %d\n", packetSize, udp->remoteIP().toString().c_str(), udp->remotePort());
-#endif
-        int volume = udp->read();
-#ifdef DEBUG_NETWORK
-        USE_SERIAL.printf("Received value: %d\n", volume);
-#endif
-        if (volume <= 0)
-            return;
-
-#ifdef DEBUG_MICROPHONE
-        USE_SERIAL.println(volume);
-#endif
-
-        audioLeds->setFillValue(volume);
-    }
-
-#ifdef DEBUG_MICROPHONE
-    else
-        USE_SERIAL.println(0);
-#endif
+    getPacket();
 }
 #endif

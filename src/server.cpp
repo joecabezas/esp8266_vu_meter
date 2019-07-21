@@ -3,7 +3,10 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
+#include "NetworkPacket.h"
+
 #include "Ticker.h"
+#include "OneButton.h"
 
 #include "Microphone.h"
 
@@ -14,6 +17,7 @@
 Microphone *microphone;
 WiFiUDP *udp;
 Ticker *volumeSenderTimer;
+OneButton *button;
 
 #ifdef UDP_MODE_BROADCAST
 IPAddress *broadcastAddress;
@@ -21,6 +25,35 @@ IPAddress *broadcastAddress;
 #include <vector>
 std::vector<IPAddress *> *clients;
 #endif
+
+void sendPacket(uint8_t command, uint8_t data)
+{
+    NetworkPacket packet;
+    packet.command = command;
+    packet.data = data;
+
+#ifdef UDP_MODE_BROADCAST
+    //this is outdated, because this is sending the volume (data)
+    //only and since 20190720 I am sending a truct of 16bytes with
+    //a command and the data, BUT, client is also outdated, so it
+    //shall work, but now BROADCAST is not supported
+    udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
+    udp->write(data);
+    udp->endPacket();
+#else
+    for (size_t i = 0; i < clients->size(); i++)
+    {
+        udp->beginPacket(*(clients->at(i)), UDP_PORT);
+        udp->write((char *)&packet, sizeof(struct NetworkPacket));
+        udp->endPacket();
+    }
+#endif
+}
+
+void sendPacket(uint8_t command)
+{
+    sendPacket(command, 0);
+}
 
 void sendVolume()
 {
@@ -32,22 +65,21 @@ void sendVolume()
     USE_SERIAL.printf("UDP about to send: %d...", volume);
 #endif
 
-#ifdef UDP_MODE_BROADCAST
-    udp->beginPacketMulticast(*broadcastAddress, UDP_PORT, WiFi.softAPIP());
-    udp->write(volume);
-    udp->endPacket();
-#else
-    for (size_t i = 0; i < clients->size(); i++)
-    {
-        udp->beginPacket(*(clients->at(i)), UDP_PORT);
-        udp->write(volume);
-        udp->endPacket();
-    }
-#endif
+    sendPacket(COMMAND_MIC_DATA, volume);
 
 #ifdef DEBUG_NETWORK
     USE_SERIAL.println("sent");
 #endif
+}
+
+void previousEffect()
+{
+    sendPacket(COMMAND_PREVIOUS_EFFECT);
+}
+
+void nextEffect()
+{
+    sendPacket(COMMAND_NEXT_EFFECT);
 }
 
 void setup()
@@ -101,12 +133,17 @@ void setup()
     udp = new WiFiUDP();
     microphone = new Microphone();
 
+    button = new OneButton(BUTTON_NEXT_EFFECT_PIN, true);
+    button->attachDoubleClick(previousEffect);
+    button->attachClick(nextEffect);
+
     volumeSenderTimer = new Ticker();
     volumeSenderTimer->attach_ms(30, sendVolume);
 }
 
 void loop()
 {
+    button->tick();
     microphone->loop();
 }
 #endif

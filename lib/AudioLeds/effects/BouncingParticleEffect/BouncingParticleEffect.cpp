@@ -1,16 +1,16 @@
 #include "BouncingParticleEffect.h"
 
-#define BOUNCING_PARTICLE_FRAME_DELAY 20
-#define NEW_PARTICLE_MINIMUM_DELAY 50
+#define BOUNCING_PARTICLE_FRAME_DELAY 5
+#define NEW_PARTICLE_MINIMUM_DELAY 20
 
 BouncingParticle::BouncingParticle()
 {
     dying = dead = false;
     color = CHSV(random8(), 255, 255);
-    position = FastLED.size() - 1;
+    position = NUMBER_OF_LEDS - 1;
     size = 4.0f;
     velocity = 0.0f;
-    acceleration = -0.15f;
+    acceleration = -0.05f;
 }
 
 void BouncingParticle::tick()
@@ -47,7 +47,7 @@ void BouncingParticle::tick()
 
 BouncingParticleEffect::BouncingParticleEffect()
 {
-    particles = new std::vector<BouncingParticle *>();
+    particles = new std::deque<BouncingParticle *>();
 
     millisecondsPassed = millis();
     millisecondsSinceLastParticle = millis();
@@ -60,19 +60,32 @@ void BouncingParticleEffect::createParticle()
 
 void BouncingParticleEffect::tick()
 {
-    std::vector<BouncingParticle *>::iterator it = particles->begin();
+    if (particles->size() == 0)
+        return;
 
-    while (it != particles->end())
+#ifdef DEBUG_EFFECT
+    USE_SERIAL.printf(">size: %d\n", particles->size());
+#endif
+
+    std::deque<BouncingParticle *>::iterator it = particles->begin();
+
+    while (true)
     {
         if ((*it)->dead)
         {
             delete *it;
             it = particles->erase(it);
+
+            if (it == particles->end())
+                break;
+
             continue;
         }
 
         (*it)->tick();
-        ++it;
+
+        if (++it == particles->end())
+            break;
     }
 }
 
@@ -83,15 +96,30 @@ void BouncingParticleEffect::fill()
         millisecondsPassed = millis();
         clean();
         tick();
+
+        if (getFillValue() > NUMBER_OF_LEDS * 0.80f)
+        {
+            input = 0.0f;
+            createParticle();
+        }
     }
 
-    if (
-        millis() - millisecondsSinceLastParticle > NEW_PARTICLE_MINIMUM_DELAY &&
-        getFillValue() > FastLED.size() * 0.85f)
-    {
-        millisecondsSinceLastParticle = millis();
-        createParticle();
-    }
+    // clean();
+    // tick();
+
+    // if (getFillValue() > NUMBER_OF_LEDS * 0.80f)
+    // {
+    //     input = 0.0f;
+    //     createParticle();
+    // }
+
+    // if (
+    //     millis() - millisecondsSinceLastParticle > NEW_PARTICLE_MINIMUM_DELAY &&
+    //     getFillValue() > NUMBER_OF_LEDS * 0.50f)
+    // {
+    //     millisecondsSinceLastParticle = millis();
+    //     // createParticle();
+    // }
 }
 
 void BouncingParticleEffect::loop()

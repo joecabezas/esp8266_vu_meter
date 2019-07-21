@@ -46,14 +46,36 @@ void AudioLeds::addEffect(AbstractEffect *effect)
     effects.push_back(effect);
 }
 
+void AudioLeds::previousEffect()
+{
+#ifdef DEBUG_AUDIO_LEDS
+    Serial.println("previousEffect");
+#endif
+
+#ifdef DEBUG_AUDIO_LEDS
+    Serial.println(currentEffectIndex);
+#endif
+    currentEffectIndex = (currentEffectIndex == 0) ? (effects.size() - 1) : currentEffectIndex - 1;
+    currentEffect = effects.at(currentEffectIndex);
+#ifdef DEBUG_AUDIO_LEDS
+    Serial.println(currentEffectIndex);
+#endif
+}
+
 void AudioLeds::nextEffect()
 {
 #ifdef DEBUG_AUDIO_LEDS
     Serial.println("nextEffect");
 #endif
 
+#ifdef DEBUG_AUDIO_LEDS
+    Serial.println(currentEffectIndex);
+#endif
     currentEffectIndex = (currentEffectIndex == (effects.size() - 1)) ? 0 : currentEffectIndex + 1;
-    currentEffect = effects[currentEffectIndex];
+    currentEffect = effects.at(currentEffectIndex);
+#ifdef DEBUG_AUDIO_LEDS
+    Serial.println(currentEffectIndex);
+#endif
 }
 
 void AudioLeds::setInputValue(uint8_t fillValue)
