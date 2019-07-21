@@ -143,11 +143,11 @@ void setup()
     }
 
     audioLeds = new AudioLeds();
-    audioLeds->addEffect(new BouncingParticleEffect());
     audioLeds->addEffect(new RainbowEffect());
+    audioLeds->addEffect(new BouncingParticleEffect());
     audioLeds->addEffect(new SolidEffect());
-    audioLeds->addEffect(new RainbowVelocityEffect());
     audioLeds->addEffect(new GradientEffect());
+    audioLeds->addEffect(new RainbowVelocityEffect());
     audioLeds->addEffect(new FireEffect());
 }
 

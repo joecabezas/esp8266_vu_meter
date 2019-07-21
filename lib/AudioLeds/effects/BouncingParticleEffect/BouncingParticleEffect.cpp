@@ -1,7 +1,7 @@
 #include "BouncingParticleEffect.h"
 
-#define BOUNCING_PARTICLE_FRAME_DELAY 5
-#define NEW_PARTICLE_MINIMUM_DELAY 20
+#define BOUNCING_PARTICLE_FRAME_DELAY 2
+#define BOUNCING_PARTICLE_FILL_VALUE_FACTOR_ACTIVATOR 0.90f
 
 BouncingParticle::BouncingParticle()
 {
@@ -10,7 +10,7 @@ BouncingParticle::BouncingParticle()
     position = NUMBER_OF_LEDS - 1;
     size = 4.0f;
     velocity = 0.0f;
-    acceleration = -0.05f;
+    acceleration = -0.06f;
 }
 
 void BouncingParticle::tick()
@@ -23,7 +23,12 @@ void BouncingParticle::tick()
 
     for (size_t i = 0; i < size; i++)
     {
-        FastLED[0][position + i] = color;
+        size_t index = position + i;
+
+        if (index >= NUMBER_OF_LEDS)
+            continue;
+
+        FastLED[0][index] = color;
     }
 
     position = _max(0.0f, position + velocity);
@@ -34,15 +39,6 @@ void BouncingParticle::tick()
 
     //check if particle needs to die
     dying = (position * position < 0.40f && velocity * velocity < 0.40f);
-
-    // #ifdef DEBUG_EFFECT
-    //     USE_SERIAL.printf(
-    //         "%f, %f, %d, %d\n",
-    //         position,
-    //         velocity,
-    //         (std::abs(position) < 0.4f && std::abs(velocity) < 0.4f) ? 2 : 0,
-    //         (color.r == 0 && color.g == 0 && color.b == 0) ? 3 : 0);
-    // #endif
 }
 
 BouncingParticleEffect::BouncingParticleEffect()
@@ -51,6 +47,11 @@ BouncingParticleEffect::BouncingParticleEffect()
 
     millisecondsPassed = millis();
     millisecondsSinceLastParticle = millis();
+}
+
+void BouncingParticleEffect::sleep()
+{
+    particles->clear();
 }
 
 void BouncingParticleEffect::createParticle()
@@ -97,29 +98,12 @@ void BouncingParticleEffect::fill()
         clean();
         tick();
 
-        if (getFillValue() > NUMBER_OF_LEDS * 0.80f)
+        if (getFillValue() > NUMBER_OF_LEDS * BOUNCING_PARTICLE_FILL_VALUE_FACTOR_ACTIVATOR)
         {
             input = 0.0f;
             createParticle();
         }
     }
-
-    // clean();
-    // tick();
-
-    // if (getFillValue() > NUMBER_OF_LEDS * 0.80f)
-    // {
-    //     input = 0.0f;
-    //     createParticle();
-    // }
-
-    // if (
-    //     millis() - millisecondsSinceLastParticle > NEW_PARTICLE_MINIMUM_DELAY &&
-    //     getFillValue() > NUMBER_OF_LEDS * 0.50f)
-    // {
-    //     millisecondsSinceLastParticle = millis();
-    //     // createParticle();
-    // }
 }
 
 void BouncingParticleEffect::loop()

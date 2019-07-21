@@ -39,6 +39,7 @@ protected:
 
 public:
     BouncingParticleEffect();
+    virtual void sleep() override;
 };
 
 #endif

@@ -50,13 +50,15 @@ void AudioLeds::previousEffect()
 {
 #ifdef DEBUG_AUDIO_LEDS
     Serial.println("previousEffect");
-#endif
-
-#ifdef DEBUG_AUDIO_LEDS
     Serial.println(currentEffectIndex);
 #endif
+
+    if (currentEffect)
+        currentEffect->sleep();
+
     currentEffectIndex = (currentEffectIndex == 0) ? (effects.size() - 1) : currentEffectIndex - 1;
     currentEffect = effects.at(currentEffectIndex);
+
 #ifdef DEBUG_AUDIO_LEDS
     Serial.println(currentEffectIndex);
 #endif
@@ -66,13 +68,15 @@ void AudioLeds::nextEffect()
 {
 #ifdef DEBUG_AUDIO_LEDS
     Serial.println("nextEffect");
-#endif
-
-#ifdef DEBUG_AUDIO_LEDS
     Serial.println(currentEffectIndex);
 #endif
+
+    if (currentEffect)
+        currentEffect->sleep();
+
     currentEffectIndex = (currentEffectIndex == (effects.size() - 1)) ? 0 : currentEffectIndex + 1;
     currentEffect = effects.at(currentEffectIndex);
+
 #ifdef DEBUG_AUDIO_LEDS
     Serial.println(currentEffectIndex);
 #endif
