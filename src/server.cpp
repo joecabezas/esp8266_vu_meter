@@ -26,6 +26,11 @@ IPAddress *broadcastAddress;
 std::vector<IPAddress *> *clients;
 #endif
 
+#ifdef TEST_EFFECTS
+#include <FastLED.h>
+uint8_t theta;
+#endif
+
 void sendPacket(uint8_t command, uint8_t data)
 {
     NetworkPacket packet;
@@ -57,6 +62,13 @@ void sendPacket(uint8_t command)
 
 void sendVolume()
 {
+
+#ifdef TEST_EFFECTS
+    theta += 10;
+    sendPacket(COMMAND_MIC_DATA, sin8(theta));
+    return;
+#endif
+
     uint8_t volume = microphone->getValue();
     if (!volume)
         return;
