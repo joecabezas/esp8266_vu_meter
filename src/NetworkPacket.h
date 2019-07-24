@@ -1,6 +1,5 @@
 #define COMMAND_MIC_DATA 0
-#define COMMAND_NEXT_EFFECT 1
-#define COMMAND_PREVIOUS_EFFECT 2
+#define COMMAND_SYNC_EFFECT_INDEX 1
 
 struct NetworkPacket
 {

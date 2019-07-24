@@ -1,6 +1,4 @@
 #ifdef CLIENT
-// pinout documentation found at:
-// https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -36,14 +34,9 @@ void readMicData(uint8_t volume)
     audioLeds->setInputValue(volume);
 }
 
-void previousEffect()
+void syncEffect(uint8_t index)
 {
-    audioLeds->previousEffect();
-}
-
-void nextEffect()
-{
-    audioLeds->nextEffect();
+    audioLeds->selectEffect(index);
 }
 
 void getPacket()
@@ -64,11 +57,8 @@ void getPacket()
         if (packet.command == COMMAND_MIC_DATA)
             readMicData(packet.data);
 
-        if (packet.command == COMMAND_PREVIOUS_EFFECT)
-            previousEffect();
-
-        if (packet.command == COMMAND_NEXT_EFFECT)
-            nextEffect();
+        if (packet.command == COMMAND_SYNC_EFFECT_INDEX)
+            syncEffect(packet.data);
     }
 }
 
@@ -143,7 +133,7 @@ void setup()
     }
 
     audioLeds = new AudioLeds();
-    audioLeds->addEffect(new FireEffect(CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White)));
+    audioLeds->addEffect(new FireEffect(CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White)));
     audioLeds->addEffect(new FireEffect());
     audioLeds->addEffect(new RainbowEffect());
     audioLeds->addEffect(new BouncingParticleEffect());

@@ -1,4 +1,11 @@
 #ifdef SERVER
+// pinout documentation found at:
+// https://github.com/esp8266/Arduino/blob/master/libraries/esp8266/examples/I2SInput/I2SInput.ino
+
+// PINOUT used:
+// SD  -> D6
+// WS  -> D5
+// SCK -> D7
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -16,8 +23,11 @@
 
 Microphone *microphone;
 WiFiUDP *udp;
-Ticker *volumeSenderTimer;
+Ticker *tickerSendVolume;
+Ticker *tickersendSyncEffect;
 OneButton *button;
+
+uint8_t currentEffectIndex = 0;
 
 #ifdef UDP_MODE_BROADCAST
 IPAddress *broadcastAddress;
@@ -46,6 +56,11 @@ void sendPacket(uint8_t command, uint8_t data)
     udp->write(data);
     udp->endPacket();
 #else
+
+#ifdef DEBUG_NETWORK
+    USE_SERIAL.printf("UDP sending: %d, %d\n", packet.command, packet.data);
+#endif
+
     for (size_t i = 0; i < clients->size(); i++)
     {
         udp->beginPacket(*(clients->at(i)), UDP_PORT);
@@ -62,7 +77,6 @@ void sendPacket(uint8_t command)
 
 void sendVolume()
 {
-
 #ifdef TEST_EFFECTS
     theta += 10;
     sendPacket(COMMAND_MIC_DATA, sin8(theta));
@@ -84,14 +98,21 @@ void sendVolume()
 #endif
 }
 
+void sendSyncEffect()
+{
+    sendPacket(COMMAND_SYNC_EFFECT_INDEX, currentEffectIndex);
+}
+
 void previousEffect()
 {
-    sendPacket(COMMAND_PREVIOUS_EFFECT);
+    currentEffectIndex = (currentEffectIndex == 0) ? (NUMBER_OF_EFFECTS - 1) : currentEffectIndex - 1;
+    sendSyncEffect();
 }
 
 void nextEffect()
 {
-    sendPacket(COMMAND_NEXT_EFFECT);
+    currentEffectIndex = (currentEffectIndex == (NUMBER_OF_EFFECTS - 1)) ? 0 : currentEffectIndex + 1;
+    sendSyncEffect();
 }
 
 void setup()
@@ -149,8 +170,11 @@ void setup()
     button->attachDoubleClick(previousEffect);
     button->attachClick(nextEffect);
 
-    volumeSenderTimer = new Ticker();
-    volumeSenderTimer->attach_ms(30, sendVolume);
+    tickerSendVolume = new Ticker();
+    tickerSendVolume->attach_ms(30, sendVolume);
+
+    tickersendSyncEffect = new Ticker();
+    tickersendSyncEffect->attach_ms(1000, sendSyncEffect);
 }
 
 void loop()

@@ -22,8 +22,10 @@ public:
 
 
     void addEffect(AbstractEffect *effect);
+    void selectEffect(uint8_t index);
     void previousEffect();
     void nextEffect();
+
     void setInputValue(uint8_t inputValue);
     void loop();
 };

@@ -39,11 +39,19 @@ AudioLeds::AudioLeds()
 
 void AudioLeds::addEffect(AbstractEffect *effect)
 {
-
     if (effects.empty())
         currentEffect = effect;
 
     effects.push_back(effect);
+}
+
+void AudioLeds::selectEffect(uint8_t index)
+{
+    if (effects.empty())
+        return;
+
+    currentEffectIndex = constrain(index, 0, NUMBER_OF_EFFECTS - 1);
+    currentEffect = effects.at(currentEffectIndex);
 }
 
 void AudioLeds::previousEffect()
